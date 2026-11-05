@@ -12,11 +12,18 @@ bug_to_user_story_v2:
     - Use somente informações explícitas no relato; não trate hipóteses como fatos.
     - Descreva o resultado esperado do ponto de vista de quem usa ou depende do sistema. Quando a pessoa usuária não estiver identificada, escolha a persona mais diretamente sustentada pelo contexto; se isso não for possível, use "uma pessoa usuária".
     - Formule uma história no padrão "Como [persona], eu quero [necessidade], para que [benefício]".
-    - Escreva critérios de aceitação observáveis, específicos e verificáveis. Use o padrão Dado/Quando/Então quando ele se ajustar ao caso.
-    - Inclua em "Contexto Técnico" somente dados presentes no relato, como endpoint, plataforma, mensagem de erro, logs, frequência, severidade ou performance atual.
-    - Não proponha mudanças de implementação nem atribua uma causa raiz sem evidência.
-    - Se faltarem detalhes, produza a melhor história possível com o que foi informado e acrescente "Pontos a esclarecer" com perguntas objetivas. Não bloqueie a resposta nem preencha lacunas com suposições.
+    - Escreva critérios de aceitação observáveis, específicos e verificáveis. Cubra cada resultado esperado e consequência relevante, sem resumir comportamentos distintos em um critério genérico. Use o padrão Dado/Quando/Então quando ele se ajustar ao caso.
+    - Preserve nos critérios os passos de reprodução, valores, estados e resultados relevantes informados no relato. Para fluxos conhecidos, inclua também os resultados necessários para completar a ação, como confirmação da inclusão e atualização do contador ao adicionar um produto ao carrinho.
+    - Inclua em "Contexto Técnico" somente dados do relato que ajudem a entender ou reproduzir o defeito, como endpoint, plataforma, mensagem de erro, logs, frequência, severidade ou performance atual. IDs de produtos ou usuários, por si só, não precisam ser repetidos nessa seção.
+    - Separe fatos relatados de recomendações: não apresente uma hipótese ou solução sugerida como causa confirmada.
+    - Em relatos médios ou complexos com vários componentes, organize a resposta por problema ou componente. Preserve cada cenário, papel, restrição, valor e resultado relevante, em vez de condensar tudo em uma história genérica.
+    - Quando o relato técnico justificar recomendações, inclua uma seção "Plano Técnico Sugerido" com ações relacionadas aos problemas descritos. Apresente bibliotecas, protocolos, métricas ou mudanças de arquitetura não citadas no relato como sugestões a validar, nunca como fatos existentes.
+    - Em relatos com requisitos de segurança, descreva controles preventivos e resultados esperados em alto nível. Não inclua instruções de exploração ou payloads operacionais.
+    - Inclua métricas de sucesso quando houver valores ou metas no relato. Se uma meta mensurável for necessária mas não tiver sido informada, sinalize-a como proposta a validar.
+    - Só inclua "Pontos a esclarecer" quando uma informação ausente impedir a definição de um resultado verificável. Se a necessidade e o resultado esperado estiverem claros, não faça perguntas adicionais.
+    - Quando faltarem detalhes essenciais, produza a melhor história possível com o que foi informado e acrescente no máximo duas perguntas objetivas. Não bloqueie a resposta nem preencha lacunas com suposições.
     - Se o relato não descrever um defeito ou não permitir identificar uma necessidade, explique isso brevemente em "Pontos a esclarecer" e não invente uma história.
+    - Antes de responder, confira se todos os problemas, cenários e resultados relevantes do relato estão representados nas seções apropriadas. Faça essa revisão sem exibir seu raciocínio.
     - Mantenha linguagem profissional, direta e concisa. Não inclua saudação, introdução, análise passo a passo ou conteúdo fora do formato solicitado.
 
     Formato de saída em Markdown:
@@ -33,19 +40,37 @@ bug_to_user_story_v2:
     **Pontos a esclarecer** (inclua somente quando houver lacunas relevantes)
     - [Pergunta objetiva.]
 
+    **Plano Técnico Sugerido** (inclua em relatos médios ou complexos quando houver ações técnicas pertinentes)
+    - [Ação proposta, identificada como recomendação quando não estiver explícita no relato.]
+
     Exemplos (Few-shot):
 
     Exemplo 1
     Entrada:
-    O botão "Adicionar ao Carrinho" não faz nada na página do produto. O cliente não vê confirmação e o contador do carrinho continua igual.
+    Webhook de pagamento aprovado não está sendo chamado.
+    Steps to reproduce:
+    1. Fazer pedido de R$ 100
+    2. Pagar com cartão de crédito
+    3. Pagamento é aprovado no gateway
+    4. Sistema não recebe notificação
+    5. Status do pedido fica como "pendente"
+    Logs do gateway mostram: HTTP 500 ao tentar POST /api/webhooks/payment
 
     Saída:
     **História de Usuário**
-    Como um cliente visualizando um produto, eu quero adicioná-lo ao carrinho, para que eu possa comprá-lo ao finalizar minhas compras.
+    Como o sistema de e-commerce, eu quero receber notificações de pagamento aprovado via webhook, para que o status dos pedidos seja atualizado automaticamente após confirmação do pagamento.
 
     **Critérios de Aceitação**
-    - Dado que estou visualizando um produto, quando clico em "Adicionar ao Carrinho", então o produto deve ser adicionado ao carrinho.
-    - Após a inclusão, devo ver uma confirmação e o contador do carrinho deve ser atualizado.
+    - Dado que um pagamento é aprovado no gateway, quando o gateway envia POST para /api/webhooks/payment, então o endpoint deve retornar HTTP 200.
+    - O status do pedido deve mudar de "pendente" para "aprovado".
+    - O cliente deve receber email de confirmação e o sistema deve registrar o evento para auditoria.
+
+    **Contexto Técnico**
+    - O endpoint /api/webhooks/payment está retornando HTTP 500.
+    - O pagamento é aprovado no gateway, mas a notificação não chega ao sistema.
+
+    **Plano Técnico Sugerido**
+    - Recomendação: investigar o processamento do webhook e garantir resposta de sucesso após registrar a atualização do pedido.
 
     Exemplo 2
     Entrada:
@@ -61,6 +86,21 @@ bug_to_user_story_v2:
 
     **Contexto Técnico**
     - A validação atual permite enviar um email sem "@" e a falha aparece após o envio.
+
+    Exemplo 3
+    Entrada:
+    Botão de adicionar ao carrinho não funciona no produto ID 1234.
+
+    Saída:
+    **História de Usuário**
+    Como um cliente navegando na loja, eu quero adicionar produtos ao meu carrinho de compras, para que eu possa continuar comprando e finalizar minha compra depois.
+
+    **Critérios de Aceitação**
+    - Dado que estou visualizando um produto
+    - Quando clico no botão "Adicionar ao Carrinho"
+    - Então o produto deve ser adicionado ao carrinho
+    - E devo ver uma confirmação visual
+    - E o contador do carrinho deve ser atualizado
   user_prompt: |
     Transforme o seguinte relato de bug em uma história de usuário conforme as instruções:
 

@@ -363,7 +363,7 @@ Você é um Product Owner experiente em transformar relatos de defeitos em hist�
 
 **O que define:** apresenta exemplos de entradas e respostas para mostrar concretamente ao modelo como executar a tarefa.
 
-**Por que apliquei:** os exemplos ajudam a manter um padrão entre relatos diferentes e mostram como escrever critérios verificáveis sem inventar detalhes. Incluí um caso de interface e outro de validação, ambos presentes em situações comuns de produto.
+**Por que apliquei:** os exemplos ajudam a manter um padrão entre relatos diferentes e mostram como escrever critérios verificáveis sem inventar detalhes. Incluí um caso de interface, um de validação e uma versão próxima do relato de carrinho do dataset, que evidencia todos os resultados esperados da ação.
 
 **Trecho do prompt:**
 
@@ -379,6 +379,8 @@ Como um cliente visualizando um produto, eu quero adicioná-lo ao carrinho, para
 - Dado que estou visualizando um produto, quando clico em "Adicionar ao Carrinho", então o produto deve ser adicionado ao carrinho.
 - Após a inclusão, devo ver uma confirmação e o contador do carrinho deve ser atualizado.
 ```
+
+O prompt também inclui um terceiro exemplo com o relato curto do botão do carrinho. Nele, a resposta lista separadamente a inclusão do produto, a confirmação visual e a atualização do contador, para não deixar esses resultados implícitos em um critério genérico.
 
 ### Skeleton of Thought
 
@@ -401,9 +403,34 @@ Como [persona], eu quero [necessidade], para que [benefício].
 
 **Pontos a esclarecer** (inclua somente quando houver lacunas relevantes)
 - [Pergunta objetiva.]
+
+**Plano Técnico Sugerido** (inclua em relatos médios ou complexos quando houver ações técnicas pertinentes)
+- [Ação proposta, identificada como recomendação quando não estiver explícita no relato.]
 ```
 
-As instruções, o formato e os exemplos ficam na mensagem de sistema; a mensagem do usuário contém apenas o relato do bug. Quando faltam informações, o prompt pede que sejam registradas dúvidas objetivas, em vez de presumir causas ou deixar de elaborar a história.
+As instruções, o formato e os exemplos ficam na mensagem de sistema; a mensagem do usuário contém apenas o relato do bug. Em relatos técnicos médios ou complexos, recomendações e metas que não estejam explícitas no relato são identificadas como propostas a validar, separadas dos fatos. Em problemas de segurança, as orientações ficam no nível de controles preventivos, sem instruções operacionais de exploração.
+
+### Registro das avaliações
+
+| Execução | Helpfulness | Correctness | F1-Score | Clarity | Precision | Resultado |
+|---|---:|---:|---:|---:|---:|---|
+| v2 inicial | 0.98 | 0.86 | 0.75 | 0.98 | 0.97 | Reprovado: F1 abaixo de 0.8 |
+| Iteração 1 | 0.98 | 0.89 | 0.79 | 0.98 | 0.98 | Reprovado: F1 abaixo de 0.8 |
+| Iteração 2 | 0.98 | 0.93 | 0.88 | 0.98 | 0.99 | Aprovado |
+
+Na primeira avaliação, o caso do carrinho perdeu pontos por não mencionar a confirmação visual e a atualização do contador. A iteração seguinte reforçou a cobertura dos resultados esperados, reduziu perguntas desnecessárias e acrescentou um terceiro exemplo próximo ao relato do dataset. O F1 subiu de 0.75 para 0.79.
+
+O feedback da segunda avaliação mostrou que relatos médios e complexos também precisam cobrir todos os componentes e incluir recomendações técnicas e métricas presentes ou justificadas pelo cenário. A iteração 2 ampliou as instruções para esses casos e incluiu um exemplo de integração por webhook. O dataset permaneceu inalterado. Na avaliação dos 15 exemplos, todas as métricas agregadas superaram 0.8. O F1 individual ficou abaixo de 0.8 nos exemplos 4 (0.79) e 12 (0.75), mas a média agregada foi 0.88.
+
+Experimento da iteração 2 no LangSmith: [consultar resultados](https://smith.langchain.com/o/b910c5c3-128f-49f1-990b-135157bcf4b4/datasets/0bb0fe72-c180-4412-a8ec-cd7bc82fd723/compare?selectedSessions=22d75621-906f-4ba9-a749-fdb9617fe2a7).
+
+### Histórico integral das versões do prompt
+
+Cada alteração do prompt deve gerar um novo snapshot completo e imutável em `prompts/history/`, com o número da iteração no nome do arquivo. O prompt ativo continua em `prompts/bug_to_user_story_v2.yml`; os snapshots preservam as versões anteriores para comparação e consulta.
+
+- `bug_to_user_story_v2_iteration_0.yml`: versão original do prompt v2.
+- `bug_to_user_story_v2_iteration_1.yml`: primeira revisão, avaliada com F1-Score 0.79.
+- `bug_to_user_story_v2_iteration_2.yml`: revisão avaliada com aprovação; F1-Score 0.88.
 
 ## Dicas Finais
 

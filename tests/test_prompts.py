@@ -38,11 +38,48 @@ def test_prompt_mentions_format(prompt_data):
 
 
 def test_prompt_has_few_shot_examples(prompt_data):
-    """The prompt must include at least two explicit input/output examples."""
+    """The prompt must include three explicit input/output examples."""
     system_prompt = prompt_data["system_prompt"]
-    assert system_prompt.count("Exemplo ") >= 2
-    assert system_prompt.count("Entrada:") >= 2
-    assert system_prompt.count("Saída:") >= 2
+    assert system_prompt.count("Exemplo ") >= 3
+    assert system_prompt.count("Entrada:") >= 3
+    assert system_prompt.count("Saída:") >= 3
+
+
+def test_prompt_distinguishes_technical_suggestions_from_facts(prompt_data):
+    """Technical recommendations must be labeled rather than presented as facts."""
+    system_prompt = prompt_data["system_prompt"]
+    assert "Plano Técnico Sugerido" in system_prompt
+    assert "sugestões a validar" in system_prompt
+    assert "causa confirmada" in system_prompt
+
+
+def test_prompt_preserves_complex_and_security_details(prompt_data):
+    """Complex issues must retain relevant details without operational exploit steps."""
+    system_prompt = prompt_data["system_prompt"]
+    assert "por problema ou componente" in system_prompt
+    assert "controles preventivos" in system_prompt
+    assert "payloads operacionais" in system_prompt
+
+
+def test_prompt_history_contains_complete_snapshots():
+    """Every archived prompt revision must contain a complete, loadable prompt."""
+    history_dir = PROMPT_PATH.parent / "history"
+    snapshots = sorted(
+        history_dir.glob("bug_to_user_story_v2_iteration_*.yml"),
+        key=lambda path: int(path.stem.rsplit("_", maxsplit=1)[1]),
+    )
+
+    assert len(snapshots) >= 3
+    latest_snapshot = None
+    for snapshot in snapshots:
+        with snapshot.open(encoding="utf-8") as snapshot_file:
+            data = yaml.safe_load(snapshot_file)
+        assert data["bug_to_user_story_v2"]["system_prompt"].strip()
+        latest_snapshot = data
+
+    with PROMPT_PATH.open(encoding="utf-8") as prompt_file:
+        active_prompt = yaml.safe_load(prompt_file)
+    assert latest_snapshot == active_prompt
 
 
 def test_prompt_no_todos(prompt_data):
