@@ -1,45 +1,59 @@
-"""
-Testes automatizados para validação de prompts.
-"""
-import pytest
-import yaml
-import sys
+"""Automated validation tests for optimized prompts."""
+
 from pathlib import Path
 
-# Adicionar src ao path
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+import pytest
+import yaml
 
-from utils import validate_prompt_structure
+PROMPT_PATH = (
+    Path(__file__).resolve().parent.parent
+    / "prompts"
+    / "bug_to_user_story_v2.yml"
+)
 
-def load_prompts(file_path: str):
-    """Carrega prompts do arquivo YAML."""
-    with open(file_path, 'r', encoding='utf-8') as f:
-        return yaml.safe_load(f)
 
-class TestPrompts:
-    def test_prompt_has_system_prompt(self):
-        """Verifica se o campo 'system_prompt' existe e não está vazio."""
-        pass
+@pytest.fixture(scope="module")
+def prompt_data():
+    """Load the optimized prompt from YAML."""
+    with PROMPT_PATH.open(encoding="utf-8") as prompt_file:
+        data = yaml.safe_load(prompt_file)
+    return data["bug_to_user_story_v2"]
 
-    def test_prompt_has_role_definition(self):
-        """Verifica se o prompt define uma persona (ex: "Você é um Product Manager")."""
-        pass
 
-    def test_prompt_mentions_format(self):
-        """Verifica se o prompt exige formato Markdown ou User Story padrão."""
-        pass
+def test_prompt_has_system_prompt(prompt_data):
+    """The optimized prompt must define a non-empty system message."""
+    assert prompt_data["system_prompt"].strip()
 
-    def test_prompt_has_few_shot_examples(self):
-        """Verifica se o prompt contém exemplos de entrada/saída (técnica Few-shot)."""
-        pass
 
-    def test_prompt_no_todos(self):
-        """Garante que você não esqueceu nenhum `[TODO]` no texto."""
-        pass
+def test_prompt_has_role_definition(prompt_data):
+    """The system message must define the assistant's role."""
+    assert "Você é um Product Owner" in prompt_data["system_prompt"]
 
-    def test_minimum_techniques(self):
-        """Verifica (através dos metadados do yaml) se pelo menos 2 técnicas foram listadas."""
-        pass
 
-if __name__ == "__main__":
-    pytest.main([__file__, "-v", "--tb=short"])
+def test_prompt_mentions_format(prompt_data):
+    """The prompt must require Markdown and a standard user story structure."""
+    system_prompt = prompt_data["system_prompt"]
+    assert "Markdown" in system_prompt
+    assert "Como [persona], eu quero [necessidade], para que [benefício]" in system_prompt
+
+
+def test_prompt_has_few_shot_examples(prompt_data):
+    """The prompt must include at least two explicit input/output examples."""
+    system_prompt = prompt_data["system_prompt"]
+    assert system_prompt.count("Exemplo ") >= 2
+    assert system_prompt.count("Entrada:") >= 2
+    assert system_prompt.count("Saída:") >= 2
+
+
+def test_prompt_no_todos(prompt_data):
+    """No unfinished TODO markers may remain in the prompt."""
+    serialized_prompt = yaml.safe_dump(prompt_data, allow_unicode=True)
+    assert "[TODO]" not in serialized_prompt
+    assert "TODO" not in serialized_prompt
+
+
+def test_minimum_techniques(prompt_data):
+    """At least two prompt-engineering techniques must be documented."""
+    techniques = prompt_data.get("techniques_applied", [])
+    assert len(techniques) >= 2
+    assert all(technique.strip() for technique in techniques)

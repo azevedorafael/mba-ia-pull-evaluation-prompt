@@ -343,6 +343,68 @@ print(Client().share_dataset(dataset_name="<seu LANGSMITH_PROJECT>-eval")["url"]
 
 Rode uma vez e guarde o endereço: ao compartilhar de novo, o link muda.
 
+## Técnicas Aplicadas (Fase 2)
+
+No prompt v2, usei três técnicas para orientar a conversão dos relatos de bugs:
+
+### Role Prompting
+
+**O que define:** atribui ao modelo um papel e um contexto de atuação, deixando claro de que perspectiva ele deve responder.
+
+**Por que apliquei:** converter um bug em uma história exige mais do que resumir o problema. A perspectiva de Product Owner ajuda a destacar a necessidade de quem usa o produto e o benefício esperado, sem transformar a resposta em uma proposta técnica de implementação.
+
+**Trecho do prompt:**
+
+```text
+Você é um Product Owner experiente em transformar relatos de defeitos em histórias de usuário claras, úteis e testáveis para equipes de produto e engenharia.
+```
+
+### Few-shot Learning
+
+**O que define:** apresenta exemplos de entradas e respostas para mostrar concretamente ao modelo como executar a tarefa.
+
+**Por que apliquei:** os exemplos ajudam a manter um padrão entre relatos diferentes e mostram como escrever critérios verificáveis sem inventar detalhes. Incluí um caso de interface e outro de validação, ambos presentes em situações comuns de produto.
+
+**Trecho do prompt:**
+
+```text
+Entrada:
+O botão "Adicionar ao Carrinho" não faz nada na página do produto. O cliente não vê confirmação e o contador do carrinho continua igual.
+
+Saída:
+**História de Usuário**
+Como um cliente visualizando um produto, eu quero adicioná-lo ao carrinho, para que eu possa comprá-lo ao finalizar minhas compras.
+
+**Critérios de Aceitação**
+- Dado que estou visualizando um produto, quando clico em "Adicionar ao Carrinho", então o produto deve ser adicionado ao carrinho.
+- Após a inclusão, devo ver uma confirmação e o contador do carrinho deve ser atualizado.
+```
+
+### Skeleton of Thought
+
+**O que define:** divide a resposta em partes ou etapas predefinidas, para organizar o conteúdo de maneira consistente.
+
+**Por que apliquei:** uma estrutura fixa facilita a leitura e a validação da história pela equipe. As seções de contexto técnico e de dúvidas são condicionais, evitando conteúdo vazio ou perguntas desnecessárias quando o relato já traz as informações necessárias.
+
+**Trecho do prompt:**
+
+```text
+Formato de saída em Markdown:
+**História de Usuário**
+Como [persona], eu quero [necessidade], para que [benefício].
+
+**Critérios de Aceitação**
+- Dado que [contexto], quando [ação], então [resultado verificável].
+
+**Contexto Técnico** (inclua somente se houver detalhes técnicos no relato)
+- [Fato técnico relatado.]
+
+**Pontos a esclarecer** (inclua somente quando houver lacunas relevantes)
+- [Pergunta objetiva.]
+```
+
+As instruções, o formato e os exemplos ficam na mensagem de sistema; a mensagem do usuário contém apenas o relato do bug. Quando faltam informações, o prompt pede que sejam registradas dúvidas objetivas, em vez de presumir causas ou deixar de elaborar a história.
+
 ## Dicas Finais
 
 - Lembre-se da importância da especificidade, contexto e persona ao refatorar prompts
