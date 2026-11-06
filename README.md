@@ -424,6 +424,8 @@ O feedback da segunda avaliação mostrou que relatos médios e complexos també
 
 Experimento da iteração 2 no LangSmith: [consultar resultados](https://smith.langchain.com/o/b910c5c3-128f-49f1-990b-135157bcf4b4/datasets/0bb0fe72-c180-4412-a8ec-cd7bc82fd723/compare?selectedSessions=22d75621-906f-4ba9-a749-fdb9617fe2a7).
 
+Dataset público de avaliação (15 exemplos e experimentos associados): [abrir no LangSmith](https://smith.langchain.com/public/8bda8e60-d51c-4649-a23f-b850b4f59cde/d).
+
 ### Histórico integral das versões do prompt
 
 Cada alteração do prompt deve gerar um novo snapshot completo e imutável em `prompts/history/`, com o número da iteração no nome do arquivo. O prompt ativo continua em `prompts/bug_to_user_story_v2.yml`; os snapshots preservam as versões anteriores para comparação e consulta.
