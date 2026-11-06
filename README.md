@@ -165,7 +165,6 @@ O prompt otimizado ([v2](./prompts/bug_to_user_story_v2.yml)) separa instruçõe
 ### Evidências no LangSmith
 
 - [Dataset público de avaliação — 15 exemplos e experimentos](https://smith.langchain.com/public/8bda8e60-d51c-4649-a23f-b850b4f59cde/d)
-- [Experimento final — resultados por exemplo e feedback das métricas](https://smith.langchain.com/o/b910c5c3-128f-49f1-990b-135157bcf4b4/datasets/0bb0fe72-c180-4412-a8ec-cd7bc82fd723/compare?selectedSessions=01dc67a9-26d8-47c7-be9a-c3951c56f13e)
 - [Prompt publicado no LangSmith Prompt Hub](https://smith.langchain.com/prompts/bug_to_user_story_v2/5dc7a4f3?organizationId=b910c5c3-128f-49f1-990b-135157bcf4b4)
 
 O dashboard abaixo mostra o dataset, os experimentos registrados, os cinco indicadores de feedback e a execução final concluída em 15/15 exemplos. A tabela de resultados acima informa os menores valores individuais; os traces públicos permitem inspecionar cada execução em detalhe.
