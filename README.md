@@ -82,7 +82,7 @@ python src/evaluate.py
 pytest tests/test_prompts.py tests/test_push_prompts.py
 ```
 
-## Técnicas Aplicadas
+## Técnicas Aplicadas (Fase 2)
 
 ### Role Prompting
 
@@ -161,6 +161,32 @@ Foram conferidas as 75 notas individuais (cinco métricas em cada um dos 15 exem
 O prompt original ([v1](./prompts/bug_to_user_story_v1.yml)) tinha instruções genéricas, repetia `{bug_report}` no system e no user prompt, não definia uma persona clara e não apresentava exemplos nem critérios de aceitação verificáveis.
 
 O prompt otimizado ([v2](./prompts/bug_to_user_story_v2.yml)) separa instruções de sistema do relato do usuário, define a persona de Product Owner, estabelece regras para preservar fatos e tratar lacunas, exige critérios observáveis e inclui exemplos para diferentes tipos e níveis de complexidade. Também orienta a preservar especificações, tarefas e métricas fornecidas no relato, distinguindo requisitos de recomendações.
+
+#### Jornada de otimização do prompt v2
+
+O histórico registra a versão inicial e quatro iterações de refinamento. Cada snapshot permite conferir como as instruções e os exemplos mudaram:
+
+| Versão | Ajustes feitos com base nos resultados e no histórico |
+|---|---|
+| [Iteração 0 — baseline](./prompts/history/bug_to_user_story_v2_iteration_0.yml) | Primeira versão avaliada do prompt otimizado. Na primeira avaliação válida, obteve Helpfulness 0,98, Correctness 0,86, F1-Score 0,75, Clarity 0,98 e Precision 0,97. O F1 abaixo de 0,8 apontou a necessidade de cobrir melhor as informações esperadas. |
+| [Iteração 1](./prompts/history/bug_to_user_story_v2_iteration_1.yml) | Tornou os critérios de aceitação mais completos, pediu a preservação de passos, valores e estados, limitou perguntas a lacunas essenciais e adicionou uma revisão de cobertura. Também incluiu um exemplo de carrinho. O F1 subiu de 0,75 para 0,79; Correctness foi de 0,86 para 0,89 e Precision de 0,97 para 0,98. O F1 ainda não atingia o limite. |
+| [Iteração 2](./prompts/history/bug_to_user_story_v2_iteration_2.yml) | Passou a separar fatos de recomendações, organizar relatos com vários componentes, preservar metas explícitas e incluir plano técnico quando pertinente. O exemplo de webhook demonstrou como manter endpoint, erro e resultado esperado. As médias ficaram acima de 0,8, mas a revisão passou a exigir que cada nota individual também atingisse o limite; a média, sozinha, não comprovava isso. |
+| [Iteração 3](./prompts/history/bug_to_user_story_v2_iteration_3.yml) | Especializou instruções para contagens de dashboard e modais em telas pequenas, acrescentando exemplos de consistência entre contagem e lista, interação com controles e verificações de acessibilidade. A avaliação individual ainda encontrou F1 de 0,7355 no caso complexo de sincronização offline, indicando omissões de requisitos técnicos detalhados. |
+| [Iteração 4](./prompts/history/bug_to_user_story_v2_iteration_4.yml) | Reforçou o inventário e a preservação de requisitos, números, protocolos, endpoints, payloads, algoritmos, limites, stack, tarefas por fase e métricas. Incluiu seções próprias para critérios técnicos, tarefas e métricas de sucesso, além de um exemplo complexo de sincronização offline. Na avaliação final, as 75 notas — cinco métricas em cada um dos 15 exemplos — ficaram todas em pelo menos 0,8. |
+
+#### Como as mudanças se refletem nas métricas
+
+Helpfulness e Correctness são métricas derivadas no avaliador do projeto: Helpfulness é a média entre Clarity e Precision; Correctness é a média entre F1-Score e Precision. As outras três são avaliadas diretamente. Portanto, melhorar cobertura pode elevar F1 e Correctness, enquanto fatos inventados ou detalhes irrelevantes podem reduzir Precision e, por consequência, Helpfulness e Correctness.
+
+| Métrica | Média: baseline → final | Menor nota final por exemplo | Como os ajustes do prompt se relacionam com a métrica |
+|---|---:|---:|---|
+| Helpfulness | 0,98 → 0,98 | 0,965 | Depende de Clarity e Precision. A organização por seções e a redução de perguntas desnecessárias ajudam a manter respostas claras e focadas; a média agregada permaneceu estável após o refinamento. |
+| Correctness | 0,86 → 0,94 | 0,8971 | É a média de F1-Score e Precision. Preservar mais requisitos da referência melhora a cobertura, enquanto separar fatos de recomendações ajuda a evitar afirmações sem suporte. |
+| F1-Score | 0,75 → 0,90 | 0,8242 | Equilibra Precision e Recall. Critérios mais completos, preservação de valores e cenários e exemplos complexos reduzem omissões sem incentivar conteúdo irrelevante. |
+| Clarity | 0,98 → 0,98 | 0,96 | Considera organização, linguagem direta, ausência de ambiguidade e concisão. O formato em Markdown e as seções específicas ajudam a organizar respostas mais completas sem perder legibilidade; a média permaneceu estável. |
+| Precision | 0,97 → 0,99 | 0,95 | Considera ausência de alucinações, foco e correção factual. As regras para não transformar hipóteses em fatos e identificar sugestões como propostas ajudam a manter as respostas pertinentes e verificáveis. |
+
+Os valores de baseline e final são médias arredondadas do conjunto. A relação descrita é coerente com as mudanças e os resultados observados, mas não isola o efeito causal de cada instrução: várias regras mudaram entre versões, e as notas são atribuídas pelo avaliador LLM. O critério final foi aplicado por exemplo, não apenas sobre as médias.
 
 ### Evidências no LangSmith
 
