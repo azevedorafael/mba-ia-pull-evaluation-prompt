@@ -38,11 +38,11 @@ def test_prompt_mentions_format(prompt_data):
 
 
 def test_prompt_has_few_shot_examples(prompt_data):
-    """The prompt must include three explicit input/output examples."""
+    """The prompt must include six explicit input/output examples."""
     system_prompt = prompt_data["system_prompt"]
-    assert system_prompt.count("Exemplo ") >= 3
-    assert system_prompt.count("Entrada:") >= 3
-    assert system_prompt.count("Saída:") >= 3
+    assert system_prompt.count("Exemplo ") >= 6
+    assert system_prompt.count("Entrada:") >= 6
+    assert system_prompt.count("Saída:") >= 6
 
 
 def test_prompt_distinguishes_technical_suggestions_from_facts(prompt_data):
@@ -61,6 +61,23 @@ def test_prompt_preserves_complex_and_security_details(prompt_data):
     assert "payloads operacionais" in system_prompt
 
 
+def test_prompt_covers_dashboard_and_mobile_modal_edge_cases(prompt_data):
+    """High-risk UI cases must cover filters, accessibility, and responsive details."""
+    system_prompt = prompt_data["system_prompt"]
+    assert "consistência entre o total e os registros exibidos" in system_prompt
+    assert "foco no modal, tecla ESC e comportamento do backdrop" in system_prompt
+    assert "Propostas a validar" in system_prompt
+
+
+def test_prompt_preserves_complex_technical_plans_and_metrics(prompt_data):
+    """Complex reports must retain architecture, phased tasks, and success metrics."""
+    system_prompt = prompt_data["system_prompt"]
+    assert "Tarefas Técnicas Sugeridas" in system_prompt
+    assert "Métricas de Sucesso" in system_prompt
+    assert "inventário de todos os requisitos" in system_prompt
+    assert "valor atual → meta" in system_prompt
+
+
 def test_prompt_history_contains_complete_snapshots():
     """Every archived prompt revision must contain a complete, loadable prompt."""
     history_dir = PROMPT_PATH.parent / "history"
@@ -69,7 +86,7 @@ def test_prompt_history_contains_complete_snapshots():
         key=lambda path: int(path.stem.rsplit("_", maxsplit=1)[1]),
     )
 
-    assert len(snapshots) >= 3
+    assert len(snapshots) >= 5
     latest_snapshot = None
     for snapshot in snapshots:
         with snapshot.open(encoding="utf-8") as snapshot_file:
